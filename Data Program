@@ -1,0 +1,70 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import csv
+
+
+def load_and_display_data():
+    file_path = input("불러올 파일 경로를 입력하세요: ")
+    df = pd.read_csv(file_path)
+    print("불러올 파일 경로:")
+    print(df)
+
+    print("1. 범위, 2. 평균, 3. NaN, 4. z, 5. 그래프")
+    analyze = input("무엇을 도와 드릴까요?")
+
+    if analyze == "1":
+        coordinate1 = input("기준이 되는 좌표는 무엇인가요?")
+        num1 = float(input("추출할 데이터의 처음 {} 좌표값은 무엇인가요?".format(coordinate1)))
+        num2 = float(input("추출할 데이터의 마지막 {} 좌표값은 무엇인가요?".format(coordinate1)))
+        filtered_data = df[(df[coordinate1] >= num1) & (df[coordinate1] <= num2)]
+        print("추출된 데이터 : ", filtered_data)
+
+    elif analyze == "2":
+        coordinate2 = input("어떤 좌표의 평균값을 구할 것인가요?")
+        mean_df = df[coordinate2].mean()
+        print(coordinate2, "의 평균: ", mean_df)
+
+    elif analyze == "3":
+        coordinate3 = input("어떤 좌표의 NaN값을 찾을 것인가요?")
+        if df[coordinate3].isnull().values.any():
+            df[coordinate3].fillna(df[coordinate3].mean().round(), inplace=True)
+        else:
+            print("NaN 값이 없습니다.")
+        print("결과 데이터 : ", df)
+
+    elif analyze == "4":
+        number = float(input("원하는 숫자를 입력하세요: "))
+        df['z'] = df['z'] + number
+        print("결과 데이터 : ", df)
+
+    elif analyze == "5":
+        x = []
+        y = []
+        z = []
+
+        with open(file_path, 'r') as csvfile:
+            plots = csv.reader(csvfile, delimiter=',')
+            next(plots)
+            for row in plots:
+                x.append(int(row[0]))
+                y.append(int(row[1]))
+                z.append(int(float(row[2])))
+
+        fig = plt.figure(figsize=(20, 20))  # 가로 세로 크기
+        ax = fig.add_subplot(projection='3d')
+        ax.plot(x, y, z, label='int load file')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.set_title('Reject')
+        ax.grid()
+        ax.legend()
+
+        ax.view_init(elev=0, azim=0)
+        plt.show()
+
+    else:
+        print("인식을 할 수 없습니다.")
+
+
+load_and_display_data()

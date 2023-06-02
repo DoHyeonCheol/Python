@@ -1,0 +1,115 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def load_and_display_data():
+    file_path = input("불러올 파일 경로를 입력하세요: ")
+    df = pd.read_csv(file_path)
+    print("불러올 파일 경로:")
+    print(df)
+
+    while True:
+        print("1. 범위, 2. 평균, 3. NaN, 4. z, 5. 그래프")
+        analyze = input("무엇을 도와 드릴까요?")
+
+        if analyze == "1":
+            coordinate1 = input("기준이 되는 좌표는 무엇인가요?")
+            num1 = float(input("추출할 데이터의 처음 {} 좌표값은 무엇인가요?".format(coordinate1)))
+            num2 = float(input("추출할 데이터의 마지막 {} 좌표값은 무엇인가요?".format(coordinate1)))
+            filtered_data = df[(df[coordinate1] >= num1) & (df[coordinate1] <= num2)]
+            print("추출된 데이터 : ", filtered_data)
+
+        elif analyze == "2":
+            coordinate2 = input("어떤 좌표의 평균값을 구할 것인가요?")
+            mean_df = df[coordinate2].mean()
+            print(coordinate2, "의 평균: ", mean_df)
+
+        elif analyze == "3":
+            print("NaN 값이 있는 데이터 : ")
+            null_data = df[df.isnull().any(axis=1)]
+            print(null_data)
+
+            fill_nan = input("NaN 값을 채우시겠습니까? [Y/N]: ")
+            if fill_nan.upper() == "Y":
+                columns_to_fill = input("빈칸을 채울 좌표(x, y, z)를 선택하세요 (예: 'x', 'y', 'z'): ").split(', ')
+
+                for column in columns_to_fill:
+                    if column == 'x':
+                        reference_columns = ['y', 'z']
+                    elif column == 'y':
+                        reference_columns = ['x', 'z']
+                    elif column == 'z':
+                        reference_columns = ['x', 'y']
+                    else:
+                        print(f"잘못된 좌표 선택: {column}")
+                        continue
+
+                    null_rows = df[df[column].isnull()]
+                    for index, row in null_rows.iterrows():
+                        values_to_reference = []
+                        for reference_column in reference_columns:
+                            reference_value = row[reference_column]
+                            if pd.notnull(reference_value):
+                                closest_value \
+                                    = df[(df[reference_column] == reference_value) & (df[column].notnull())][column]
+                                if not closest_value.empty:
+                                    values_to_reference.append(closest_value.iloc[0])
+
+                        if values_to_reference:
+                            mean_val = np.mean(values_to_reference)
+                            df.at[index, column] = round(mean_val, 3)
+                        else:
+                            print(f"경고: 인덱스 {index}에서 NaN 값을 대체할 수 있는 가장 가까운 값을 찾을 수 없습니다.")
+
+                    print(f"{column} 값이 채워진 데이터 : ")
+                    print(df)
+
+            else:
+                print("NaN 값을 채우지 않고 다음 작업을 진행합니다.")
+
+        elif analyze == "4":
+            number = float(input("원하는 숫자를 입력하세요: "))
+            df['z'] = df['z'] + number
+            print("결과 데이터 : ", df)
+
+        elif analyze == "5":
+            x = df["x"].tolist()
+            y = df["y"].tolist()
+            z = df["z"].tolist()
+
+            fig = plt.figure(figsize=(20, 20))  # 가로 세로 크기
+            ax = fig.add_subplot(projection='3d')
+            ax.plot(x, y, z, label='int load file')
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
+            ax.set_title('Reject')
+            ax.grid()
+            ax.legend()
+
+            ax.view_init(elev=0, azim=0)
+            plt.show()
+
+        else:
+            print("인식을 할 수 없습니다.")
+
+        save_changes = input("변경 사항을 저장하시겠습니까? (Y/N): ")
+        if save_changes.upper() == "Y":
+            output_directory = input("내보낼 파일 경로를 입력하세요: ")
+            output_filename = input("파일명을 입력하세요: ")
+            output_file_path = output_directory + "/" + output_filename
+            df.to_csv(output_file_path, index=False, sep=',')
+            print("파일이 성공적으로 내보내졌습니다.")
+
+            use_changed_df = input("변경된 데이터프레임을 사용하시겠습니까? [Y/N]: ")
+            if use_changed_df.upper() == "N":
+                df = pd.read_csv(file_path)
+
+        next_action = input("다음 작업을 진행하시겠습니까? [Y/N]: ")
+        if next_action.upper() != "Y":
+            print("수고하셨습니다.")
+            break
+
+
+load_and_display_data()

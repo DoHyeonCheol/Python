@@ -1,0 +1,57 @@
+import os
+
+def split_file_by_approx_size(input_filename, output_folder, target_size):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    with open(input_filename, 'r') as input_file:
+        chunk_number = 0
+        current_size = 0
+        current_lines = []
+
+        for line in input_file:
+            line_size = len(line.encode('utf-8'))
+            if current_size + line_size > target_size:
+                output_filename = os.path.join(output_folder, f"{chunk_number}.txt")
+                with open(output_filename, 'w') as output_file:
+                    output_file.writelines(current_lines)
+
+                chunk_number += 1
+                current_size = 0
+                current_lines = []
+
+            current_lines.append(line)
+            current_size += line_size
+
+        # Write any remaining lines to the last chunk
+        if current_lines:
+            output_filename = os.path.join(output_folder, f"{chunk_number}.txt")
+            with open(output_filename, 'w') as output_file:
+                output_file.writelines(current_lines)
+
+def merge_files(input_folder, output_filename):
+    input_files = [file for file in os.listdir(input_folder) if os.path.isfile(os.path.join(input_folder, file))]
+    input_files = [os.path.join(input_folder, file) for file in input_files]
+
+    with open(output_filename, 'w') as output_file:
+        for input_file in input_files:
+            with open(input_file, 'r') as file:
+                output_file.write(file.read())
+
+
+if __name__ == "__main__":
+    choice = input("기능을 선택하세요 (1: 파일 나누기, 2: 파일 합치기): ")
+
+    if choice == '1':
+        input_file = input("원본 파일 경로와 파일 이름을 입력하세요: ")
+        output_folder = input("출력 폴더 경로를 입력하세요: ")
+        target_size_gb = 5  # 약 5GB 크기로 파일을 자르고자 함
+
+        target_size_bytes = target_size_gb * 1024 * 1024 * 1024
+        split_file_by_approx_size(input_file, output_folder, target_size_bytes)
+
+    elif choice == '2':
+        input_folder = input("파일들이 있는 폴더의 경로를 입력하세요: ")
+        output_file = input("출력 파일 이름을 입력하세요: ")
+        merge_files(input_folder, output_file)
+
